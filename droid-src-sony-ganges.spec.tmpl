@@ -12,7 +12,13 @@
 %define lunch_device aosp_i4113
 %define pre_actions sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
 
-%define post_build_actions mv rpm/patches patches; /bin/sh ./rpm/apply-patches.sh
+# There are some symbolic links that point to them self and rpm does not eat
+# those anymore. Using readlink canonicalization failure to find those.
+# The fprint stderr and dev/null thing is for hiding the normal readlink output.
+%define post_build_actions \
+mv rpm/patches patches; /bin/sh ./rpm/apply-patches.sh\
+find %{android_root} -type l ! -exec readlink -qf {} \\; -fprint /dev/stderr -delete > /dev/null\
+%{nil}
 
 # Our promotions fail, because rpm v4.9 can't handle conditional macros well, see JB#33275
 # Let's work around it for now:
